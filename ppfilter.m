@@ -7,18 +7,18 @@ clc;clear all;close all;
 %subbw=750
 %bw=300000
 %fsym=375
-load('pp_coef.mat') %原型滤波器
-%load('coef4096.mat')
+%load('pp_coef.mat') %原型滤波器
+load('coef4096.mat')
 % load('coef2048.mat')
 % load('coef512.mat')
 %load('Coef_Prototype_pr_m16_M512.mat');
-p_coef=pp_coef;
- %p_coef=Num1;%4096
+%p_coef=pp_coef;
+p_coef=Num1;%4096
 %     p_coef=Num2;%2048
 %     p_coef=coef512;
 data_m=1024;%bit数
 N=1024;%bit数
- M=512;%信道数
+M=512;%信道数
 SNR=1:1:20;%信噪比变化
 snr=10.^(SNR/10);
 data=randi([0 1],1,data_m);
@@ -43,10 +43,11 @@ for j=1:length(SNR)
 %     figure(1);
 %     pwelch(data_r,[],[],[],'centered');
 %      saveas(1,'基带频谱.jpg');
-%% added by Haidi, data quantized and written to txt
+%% added by Haidi, data, coefficient quantized and written to txt
 s=1;
 wl=12;
 fl=8;
+% data 
 data_r_q = fi(data_r,s,wl,fl);
 data_r_q_real = real(data_r_q);
 data_r_q_imag = imag(data_r_q);
@@ -57,11 +58,28 @@ fprintf(FID1,'MEMORY_INITIALIZATION_RADIX=2;\n');
 fprintf(FID1,'MEMORY_INITIALIZATION_VECTOR=\n');
 for i = 1:length(data_r_q_real)
     if(i<length(data_r_q_real))
-        fprintf(FID1,'%s',data_r_q_real_bin(1+15*(i-1):1+15*(i-1)+11));
+        fprintf(FID1,'%s',data_r_q_real_bin(1+15*(i-1):1+15*(i-1)+11)); %15 = wl+3, 11 = wl-1
         fprintf(FID1,'%s,\n',data_r_q_imag_bin(1+15*(i-1):1+15*(i-1)+11));
     else
         fprintf(FID1,'%s',data_r_q_real_bin(1+15*(i-1):1+15*(i-1)+11));
         fprintf(FID1,'%s;\n',data_r_q_imag_bin(1+15*(i-1):1+15*(i-1)+11));
+    end
+end
+
+% coef
+s=1;
+wl=16;
+fl=14;
+p_coef_q = fi(p_coef,s,wl,fl);
+p_coef_q_bin = p_coef_q.bin;
+FID1 = fopen('coe_q_binary.txt','w+');
+fprintf(FID1,'MEMORY_INITIALIZATION_RADIX=2;\n');
+fprintf(FID1,'MEMORY_INITIALIZATION_VECTOR=\n');
+for i = 1:length(p_coef_q)
+    if(i<length(p_coef_q))
+        fprintf(FID1,'%s,\n',p_coef_q_bin(1+19*(i-1):1+19*(i-1)+15)); %19 = wl+3, 15 = wl-1
+    else
+        fprintf(FID1,'%s;\n',p_coef_q_bin(1+19*(i-1):1+19*(i-1)+15));
     end
 end
 
@@ -125,9 +143,9 @@ end
         [m,n]=min(dis);
         data_rx(1,i)=qpsk_std(n);
     end
-    sym_b=length(find(data_rx(8:end)~=data_q(1:length(data_rx)-7)));%8196
+    %sym_b=length(find(data_rx(8:end)~=data_q(1:length(data_rx)-7)));%8196
     %sym_b=length(find(data_rx(2:end)~=data_q(1:length(data_rx)-1)));%2048
-    %sym_b=length(find(data_rx(4:end)~=data_q(1:length(data_rx)-3)));%4096
+    sym_b=length(find(data_rx(4:end)~=data_q(1:length(data_rx)-3)));%4096
     %sym_b=length(find(data_rx(1:end)~=data_q(1:length(data_rx))));%512
     sym_ber(j)=sym_b/length(data_q);%j
  end
@@ -146,12 +164,12 @@ qpsk_awgn=1/2*erfc(sqrt(snr));%AWGN信道下QPSK理论误码率
     pwelch(polyphsOut,[],[],[],'centered');
     figure(3);
     pwelch(polyfftout(1,:),[],[],[],'centered'); %polyfftout
-% figure(1);
-% semilogy(SNR,sym_ber,'-r*');hold on;
-% semilogy(SNR,qpsk_awgn,'-go');hold on;
-% axis([-1,6,10^-4,1]);
-% title('QPSK误码性能分析');
-% xlabel('信噪比（dB）');ylabel('BER');
+figure(1);
+semilogy(SNR,sym_ber,'-r*');hold on;
+semilogy(SNR,qpsk_awgn,'-go');hold on;
+axis([-1,6,10^-4,1]);
+title('QPSK误码性能分析');
+xlabel('信噪比（dB）');ylabel('BER');
 %saveas(1,'ber8191曲线.jpg');
 %saveas(1,'ber4096曲线.jpg');
 %saveas(1,'ber2048曲线.jpg');
