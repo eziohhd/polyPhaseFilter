@@ -53,7 +53,7 @@ data_r_q_real = real(data_r_q);
 data_r_q_imag = imag(data_r_q);
 data_r_q_real_bin = data_r_q_real.bin;
 data_r_q_imag_bin = data_r_q_imag.bin;
-FID1 = fopen('data_q_binary.txt','w+');
+FID1 = fopen('data_q_binary.txt','w+');% 1016*24(complex)
 fprintf(FID1,'MEMORY_INITIALIZATION_RADIX=2;\n');
 fprintf(FID1,'MEMORY_INITIALIZATION_VECTOR=\n');
 for i = 1:length(data_r_q_real)
@@ -72,7 +72,7 @@ wl=16;
 fl=14;
 p_coef_q = fi(p_coef,s,wl,fl);
 p_coef_q_bin = p_coef_q.bin;
-FID1 = fopen('coe_q_binary.txt','w+');
+FID1 = fopen('coe_q_binary.txt','w+'); %4096x16
 fprintf(FID1,'MEMORY_INITIALIZATION_RADIX=2;\n');
 fprintf(FID1,'MEMORY_INITIALIZATION_VECTOR=\n');
 for i = 1:length(p_coef_q)
@@ -82,7 +82,6 @@ for i = 1:length(p_coef_q)
         fprintf(FID1,'%s;\n',p_coef_q_bin(1+19*(i-1):1+19*(i-1)+15));
     end
 end
-
 
     %% 信道分配
     channel=zeros(M,data_len);
@@ -111,6 +110,35 @@ end
 %       figure(2);
 %       pwelch(polyphsOut,[],[],[],'centered');
 %       saveas(2,'合路图512.jpg');
+
+%% polyPhaseOut
+polyphsOut_real = real(polyphsOut);
+polyphsOut_imag = imag(polyphsOut);
+polyphsOut_real_min = min(polyphsOut_real);
+polyphsOut_real_max = max(polyphsOut_real);
+polyphsOut_imag_min = min(polyphsOut_imag);
+polyphsOut_imag_max = max(polyphsOut_imag);
+% s=1;
+% wl=12;
+% fl=8;
+% % data 
+% data_r_q = fi(data_r,s,wl,fl);
+% data_r_q_real = real(data_r_q);
+% data_r_q_imag = imag(data_r_q);
+% data_r_q_real_bin = data_r_q_real.bin;
+% data_r_q_imag_bin = data_r_q_imag.bin;
+% FID1 = fopen('data_q_binary.txt','w+');% 1016*24(complex)
+% fprintf(FID1,'MEMORY_INITIALIZATION_RADIX=2;\n');
+% fprintf(FID1,'MEMORY_INITIALIZATION_VECTOR=\n');
+% for i = 1:length(data_r_q_real)
+%     if(i<length(data_r_q_real))
+%         fprintf(FID1,'%s',data_r_q_real_bin(1+15*(i-1):1+15*(i-1)+11)); %15 = wl+3, 11 = wl-1
+%         fprintf(FID1,'%s,\n',data_r_q_imag_bin(1+15*(i-1):1+15*(i-1)+11));
+%     else
+%         fprintf(FID1,'%s',data_r_q_real_bin(1+15*(i-1):1+15*(i-1)+11));
+%         fprintf(FID1,'%s;\n',data_r_q_imag_bin(1+15*(i-1):1+15*(i-1)+11));
+%     end
+% end
     %% 多相分路
     sublen=length(polyphsOut)/M;
     polyFiltOut=zeros(M,sublen);  
